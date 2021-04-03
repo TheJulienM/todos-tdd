@@ -1,15 +1,18 @@
-def main():
-    task_manager = TaskManager()
-    while True:
-        command = input(">>> ")
-        action = parse(command)
-        task_manager.execute(action)
-        print(task_manager)
+import pickle
+from pathlib import Path
 
 
 class TaskManager:
-    def __init__(self):
+    def __init__(self, *, repository_path):
         self.tasks = []
+        self.repository = Repository(path=repository_path)
+        self.load_tasks()
+
+    def load_tasks(self):
+        self.tasks = self.repository.load_tasks()
+
+    def save_tasks(self):
+        self.repository.save_tasks(self.tasks)
 
     def execute(self, action):
         if isinstance(action, AddAction):
@@ -81,13 +84,57 @@ class Task:
         self.description = description
         self.done = done
 
+    def __eq__(self, other):
+        return (
+            self.number == other.number
+            and self.description == other.description
+            and self.done == other.done
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         box = "[x]" if self.done else "[ ]"
         return f"{self.number} {box} {self.description}"
 
+    def __repr__(self):
+        return f"Task<{self.number} - {self.done} - {self.description}>"
+
+
+class Repository:
+    def __init__(self, path):
+        self.path = path
+
+    def save_tasks(self, tasks):
+        with open(self.path, "wb") as f:
+            pickle.dump(tasks, f)
+
+    def load_tasks(self):
+        if not self.path.exists():
+            return []
+        with open(self.path, "rb") as f:
+            return pickle.load(f)
+
 
 def extract_argument(cmd):
     return cmd[2:]
+
+
+def main():
+    repository_path = Path("tasks.pickle")
+    task_manager = TaskManager(repository_path=repository_path)
+    print(task_manager)
+    while True:
+        command = input(">>> ")
+        if command == "q":
+            break
+        action = parse(command)
+        if not action:
+            print("Unknow action")
+        task_manager.execute(action)
+        print(task_manager)
+    task_manager.save_tasks()
 
 
 if __name__ == "__main__":
