@@ -4,7 +4,7 @@ import sqlite3
 
 
 def main():
-    db_path = Path("tasks.db")
+    db_path = Path("task.db")
     task_manager = TaskManager(db_path)
     task_manager.load_tasks()
     print(task_manager)
@@ -64,6 +64,13 @@ class Repository:
         cursor.execute("UPDATE tasks SET done=? WHERE number=?", (done, number))
         self.connection.commit()
 
+    # Add method to clean the database after each test
+    def clean_database(self):
+        cursor = self.connection.cursor()
+        cursor.execute("DELETE FROM tasks")
+        self.connection.commit()
+        cursor.execute("VACUUM")
+        self.connection.commit()
 
 class TaskManager:
     def __init__(self, path):

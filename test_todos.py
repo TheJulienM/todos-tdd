@@ -10,7 +10,6 @@ from todos import (
 
 import pytest
 
-
 def test_can_create_an_add_action():
     add_action = AddAction(description="new task")
 
@@ -73,7 +72,7 @@ def test_can_load_and_save_tasks(tmp_path):
     * Re-create an other Repository
     * Check that the new repository also has two tasks
     """
-    db_path = tmp_path / "tasks.db"
+    db_path = tmp_path / "tests.db"
 
     # Arrange
     repository = Repository(db_path)
@@ -86,10 +85,12 @@ def test_can_load_and_save_tasks(tmp_path):
 
     # Assert
     assert len(loaded_tasks) == 2
+    repository.clean_database()
 
 
 def test_task_manager_has_no_tasks_by_default(task_manager):
     assert task_manager.load_tasks() == []
+    task_manager.repository.clean_database()
 
 
 def test_execute_add_action(task_manager):
@@ -100,6 +101,7 @@ def test_execute_add_action(task_manager):
     (actual,) = task_manager.load_tasks()
     assert actual.description == "new task"
     assert actual.number == 1
+    task_manager.repository.clean_database()
 
 
 def test_execute_update_action(task_manager):
@@ -119,6 +121,7 @@ def test_execute_update_action(task_manager):
 
     (actual,) = task_manager.load_tasks()
     assert actual.done
+    task_manager.repository.clean_database()
 
 
 def test_execute_delete_action(task_manager):
@@ -137,3 +140,4 @@ def test_execute_delete_action(task_manager):
     task_manager.execute(delete_action)
 
     assert not task_manager.load_tasks()
+    task_manager.repository.clean_database()
